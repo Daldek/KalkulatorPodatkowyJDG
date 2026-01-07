@@ -1,0 +1,1 @@
+"""Modele wejścia/wyjścia (Pydantic)."""

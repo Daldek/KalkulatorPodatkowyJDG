@@ -1,0 +1,68 @@
+{
+  "note": "To jest uproszczony przykład response. Pełny response zawiera 60 punktów danych dla każdej formy.",
+  "best_form": "lump_sum",
+  "best_form_description": "Na podstawie obliczeń matematycznych najkorzystniejsza forma to ryczałt (najwyższy dochód netto: 2801728.20 PLN)",
+  "summary": {
+    "tax_scale": {
+      "form_name": "tax_scale",
+      "total_revenue": 3000000,
+      "total_costs": 315000,
+      "total_income": 2685000,
+      "total_zus": 50000,
+      "total_tax": 310000,
+      "total_health_insurance": 241650,
+      "total_net_income": 2083350
+    },
+    "linear_tax": {
+      "form_name": "linear_tax",
+      "total_revenue": 3000000,
+      "total_costs": 315000,
+      "total_income": 2685000,
+      "total_zus": 50000,
+      "total_tax": 510150,
+      "total_health_insurance": 241650,
+      "total_net_income": 1883200
+    },
+    "lump_sum": {
+      "form_name": "lump_sum",
+      "total_revenue": 3000000,
+      "total_costs": 0,
+      "total_income": 3000000,
+      "total_zus": 50000,
+      "total_tax": 165000,
+      "total_health_insurance": 33271.80,
+      "total_net_income": 2751728.20
+    }
+  },
+  "monthly_data_sample": {
+    "note": "Przykład danych dla pierwszego miesiąca (2025-01)",
+    "month": "2025-01",
+    "tax_scale": {
+      "revenue": 50000,
+      "costs": 15000,
+      "income": 35000,
+      "zus": 0,
+      "tax": 3900,
+      "health_insurance": 3150,
+      "net_income": 27950
+    },
+    "linear_tax": {
+      "revenue": 50000,
+      "costs": 15000,
+      "income": 35000,
+      "zus": 0,
+      "tax": 6650,
+      "health_insurance": 3150,
+      "net_income": 25200
+    },
+    "lump_sum": {
+      "revenue": 50000,
+      "costs": 0,
+      "income": 50000,
+      "zus": 0,
+      "tax": 2750,
+      "health_insurance": 554.53,
+      "net_income": 46695.47
+    }
+  }
+}

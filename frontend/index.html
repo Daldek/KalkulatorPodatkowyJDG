@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Podatkowy JDG 2025</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Kalkulator Podatkowy JDG</h1>
+            <p class="subtitle">Porównanie form opodatkowania dla jednoosobowej działalności gospodarczej (2025)</p>
+            <p class="disclaimer">
+                <strong>UWAGA:</strong> Aplikacja ma charakter informacyjny i symulacyjny.
+                Nie stanowi doradztwa podatkowego. Wyniki oparte wyłącznie na obliczeniach matematycznych.
+            </p>
+        </header>
+
+        <main>
+            <!-- Formularz danych wejściowych -->
+            <section class="input-section">
+                <h2>Dane wejściowe</h2>
+
+                <form id="taxForm">
+                    <div class="form-group">
+                        <label for="startDate">Data rozpoczęcia działalności:</label>
+                        <input
+                            type="date"
+                            id="startDate"
+                            name="startDate"
+                            required
+                            value="2025-01-01"
+                        >
+                        <small>Miesiąc rozpoczęcia = miesiąc bazowy dla obliczeń (60 miesięcy). Automatycznie określa etapy ZUS (6 pełnych miesięcy ulgi).</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="monthlyRevenue">Miesięczny przychód (PLN):</label>
+                        <input
+                            type="number"
+                            id="monthlyRevenue"
+                            name="monthlyRevenue"
+                            min="0"
+                            step="0.01"
+                            required
+                            value="20000"
+                        >
+                        <small>Przychód będzie powtórzony dla wszystkich 60 miesięcy</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="monthlyCosts">Stałe koszty miesięczne (PLN):</label>
+                        <input
+                            type="number"
+                            id="monthlyCosts"
+                            name="monthlyCosts"
+                            min="0"
+                            step="0.01"
+                            required
+                            value="2500"
+                        >
+                        <small>Koszty uwzględniane w skali i liniowym, w ryczałcie obniżają dochód brutto (ale nie podatek)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="lumpSumRate">Stawka ryczałtu (%):</label>
+                        <input
+                            type="text"
+                            id="lumpSumRate"
+                            name="lumpSumRate"
+                            required
+                            value="12"
+                            placeholder="np. 12 lub 5,5 lub 8.5"
+                        >
+                        <small>Wpisz stawkę ryczałtu w procentach (możesz używać kropki lub przecinka, np. 12 lub 5,5)</small>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Oblicz porównanie</button>
+                        <button type="reset" class="btn-secondary">Wyczyść</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Sekcja wyników (ukryta domyślnie) -->
+            <section id="resultsSection" class="results-section" style="display: none;">
+                <h2>Wyniki porównania</h2>
+
+                <!-- Najkorzystniejsza forma -->
+                <div id="bestFormInfo" class="best-form-info"></div>
+
+                <!-- Wykres -->
+                <div class="chart-container">
+                    <canvas id="comparisonChart"></canvas>
+                </div>
+
+                <!-- Tabele podsumowań -->
+                <div class="summary-table">
+                    <h3 id="summary6mLabel">Podsumowanie po 6 miesiącach (koniec ulgi ZUS)</h3>
+                    <table id="summary6mTable">
+                        <thead>
+                            <tr>
+                                <th>Forma opodatkowania</th>
+                                <th>Przychód</th>
+                                <th>Koszty</th>
+                                <th>Dochód</th>
+                                <th>ZUS</th>
+                                <th>Podatek</th>
+                                <th>Składka zdrowotna</th>
+                                <th>Składki razem</th>
+                                <th>Obciążenie</th>
+                                <th>Dochód netto</th>
+                            </tr>
+                        </thead>
+                        <tbody id="summary6mTableBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="summary-table">
+                    <h3 id="summary12mLabel">Podsumowanie po 12 miesiącach (pierwszy rok)</h3>
+                    <table id="summary12mTable">
+                        <thead>
+                            <tr>
+                                <th>Forma opodatkowania</th>
+                                <th>Przychód</th>
+                                <th>Koszty</th>
+                                <th>Dochód</th>
+                                <th>ZUS</th>
+                                <th>Podatek</th>
+                                <th>Składka zdrowotna</th>
+                                <th>Składki razem</th>
+                                <th>Obciążenie</th>
+                                <th>Dochód netto</th>
+                            </tr>
+                        </thead>
+                        <tbody id="summary12mTableBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="summary-table">
+                    <h3 id="summary30mLabel">Podsumowanie po 30 miesiącach (koniec preferencyjnego ZUS)</h3>
+                    <table id="summary30mTable">
+                        <thead>
+                            <tr>
+                                <th>Forma opodatkowania</th>
+                                <th>Przychód</th>
+                                <th>Koszty</th>
+                                <th>Dochód</th>
+                                <th>ZUS</th>
+                                <th>Podatek</th>
+                                <th>Składka zdrowotna</th>
+                                <th>Składki razem</th>
+                                <th>Obciążenie</th>
+                                <th>Dochód netto</th>
+                            </tr>
+                        </thead>
+                        <tbody id="summary30mTableBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="summary-table">
+                    <h3 id="summary60mLabel">Podsumowanie po 60 miesiącach (5 lat)</h3>
+                    <table id="summary60mTable">
+                        <thead>
+                            <tr>
+                                <th>Forma opodatkowania</th>
+                                <th>Przychód</th>
+                                <th>Koszty</th>
+                                <th>Dochód</th>
+                                <th>ZUS</th>
+                                <th>Podatek</th>
+                                <th>Składka zdrowotna</th>
+                                <th>Składki razem</th>
+                                <th>Obciążenie</th>
+                                <th>Dochód netto</th>
+                            </tr>
+                        </thead>
+                        <tbody id="summary60mTableBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Szczegóły miesięczne (opcjonalnie) -->
+                <details class="monthly-details">
+                    <summary>Pokaż szczegóły miesięczne</summary>
+                    <div id="monthlyData"></div>
+                </details>
+            </section>
+
+            <!-- Loading spinner -->
+            <div id="loadingSpinner" class="loading-spinner" style="display: none;">
+                <div class="spinner"></div>
+                <p>Obliczanie...</p>
+            </div>
+
+            <!-- Komunikaty błędów -->
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+        </main>
+
+        <footer>
+            <p>Kalkulator Podatkowy JDG v1.0.0 | Rok podatkowy: 2025</p>
+            <p>Aplikacja ma charakter informacyjny i symulacyjny</p>
+        </footer>
+    </div>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <!-- Aplikacja -->
+    <script src="js/app.js"></script>
+</body>
+</html>

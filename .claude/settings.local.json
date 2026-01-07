@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -m py_compile:*)",
+      "Bash(tree:*)",
+      "Bash(find:*)",
+      "Bash(python3:*)",
+      "Bash(./venv/bin/pytest tests/ -v --tb=line -q)",
+      "Bash(curl:*)",
+      "Bash(python -m json.tool:*)",
+      "Bash( cat /tmp/response.json)",
+      "Bash(cat:*)",
+      "Bash(./venv/bin/uvicorn:*)",
+      "Bash(./venv/bin/python:*)"
+    ]
+  }
+}
