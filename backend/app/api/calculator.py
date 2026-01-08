@@ -219,7 +219,7 @@ async def calculate_taxes(request: CalculationRequest) -> ComparisonResultRespon
             base_month=request.base_month,
             business_start_date=request.business_start_date,
             monthly_revenues=request.monthly_revenues,
-            monthly_costs_fixed=request.monthly_costs_fixed,
+            monthly_costs=request.monthly_costs,
             one_time_costs=one_time_costs,
             lump_sum_revenues=lump_sum_revenues,
         )

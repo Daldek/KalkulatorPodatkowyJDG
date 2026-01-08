@@ -16,6 +16,9 @@ let cumulativeChart = null;
 // Revenue table state
 let revenueTableData = Array(60).fill(0); // Stores all 60 monthly revenues
 
+// Costs table state
+let costsTableData = Array(60).fill(0); // Stores all 60 monthly costs
+
 // Inicjalizacja aplikacji
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('taxForm');
@@ -32,8 +35,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const monthlyRevenueInput = document.getElementById('monthlyRevenue');
     monthlyRevenueInput.addEventListener('input', handleBaseRevenueChange);
 
+    // Initialize costs table interactions
+    const showCostsTableCheckbox = document.getElementById('showCostsTable');
+    showCostsTableCheckbox.addEventListener('change', handleCostsTableVisibilityToggle);
+
+    const annualCostsGrowthInput = document.getElementById('annualCostsGrowth');
+    annualCostsGrowthInput.addEventListener('input', handleCostsGrowthChange);
+
+    const monthlyCostsInput = document.getElementById('monthlyCosts');
+    monthlyCostsInput.addEventListener('input', handleBaseCostsChange);
+
     // Initialize revenue table data
     initializeRevenueTable();
+
+    // Initialize costs table data
+    initializeCostsTable();
 });
 
 /**
@@ -160,6 +176,102 @@ function handleCellEdit(input) {
 }
 
 /**
+ * Initializes costs table with current base costs
+ */
+function initializeCostsTable() {
+    const baseCosts = parseFloat(document.getElementById('monthlyCosts').value) || 0;
+    const annualCostsGrowth = parseFloat(document.getElementById('annualCostsGrowth').value) || 0;
+    costsTableData = generateRevenuesWithGrowth(baseCosts, annualCostsGrowth);
+}
+
+/**
+ * Handles visibility toggle for costs table
+ */
+function handleCostsTableVisibilityToggle(event) {
+    const container = document.getElementById('costsTableContainer');
+    if (event.target.checked) {
+        container.style.display = 'block';
+        renderCostsTable();
+    } else {
+        container.style.display = 'none';
+    }
+}
+
+/**
+ * Handles changes to annual costs growth percentage
+ * ALWAYS regenerates table values
+ */
+function handleCostsGrowthChange() {
+    const baseCosts = parseFloat(document.getElementById('monthlyCosts').value) || 0;
+    const annualCostsGrowth = parseFloat(document.getElementById('annualCostsGrowth').value) || 0;
+
+    // Regenerate all costs values
+    costsTableData = generateRevenuesWithGrowth(baseCosts, annualCostsGrowth);
+
+    // Update table if visible
+    if (document.getElementById('showCostsTable').checked) {
+        renderCostsTable();
+    }
+}
+
+/**
+ * Handles changes to base monthly costs
+ * ALWAYS regenerates table values
+ */
+function handleBaseCostsChange() {
+    handleCostsGrowthChange(); // Same logic - regenerate everything
+}
+
+/**
+ * Renders the 5x12 costs table
+ */
+function renderCostsTable() {
+    const table = document.getElementById('costsTable');
+
+    // Build table HTML
+    let html = '<thead><tr><th>Rok</th>';
+
+    // Month headers
+    const monthNames = ['Sty', 'Lut', 'Mar', 'Kwi', 'Maj', 'Cze',
+                        'Lip', 'Sie', 'Wrz', 'Paź', 'Lis', 'Gru'];
+    monthNames.forEach(month => {
+        html += `<th>${month}</th>`;
+    });
+    html += '</tr></thead><tbody>';
+
+    // 5 rows (years)
+    for (let year = 0; year < 5; year++) {
+        html += `<tr><td class="year-label">Rok ${year + 1}</td>`;
+
+        // 12 columns (months)
+        for (let month = 0; month < 12; month++) {
+            const index = year * 12 + month;
+            const value = costsTableData[index].toFixed(2);
+            html += `<td><input type="number"
+                                 min="0"
+                                 step="0.01"
+                                 value="${value}"
+                                 data-index="${index}"
+                                 onchange="handleCostsCellEdit(this)"></td>`;
+        }
+        html += '</tr>';
+    }
+    html += '</tbody>';
+
+    table.innerHTML = html;
+}
+
+/**
+ * Handles manual editing of a costs cell
+ * Updates the internal state
+ */
+function handleCostsCellEdit(input) {
+    const index = parseInt(input.dataset.index);
+    const value = parseFloat(input.value) || 0;
+    costsTableData[index] = value;
+}
+
+/**
  * Handles form reset
  */
 function handleFormReset() {
@@ -167,9 +279,14 @@ function handleFormReset() {
     document.getElementById('showRevenueTable').checked = false;
     document.getElementById('revenueTableContainer').style.display = 'none';
 
-    // Reset revenue data
+    // Hide costs table
+    document.getElementById('showCostsTable').checked = false;
+    document.getElementById('costsTableContainer').style.display = 'none';
+
+    // Reset revenue and costs data
     setTimeout(() => {
         initializeRevenueTable();
+        initializeCostsTable();
     }, 0);
 }
 
@@ -268,6 +385,9 @@ function prepareRequestData(formData) {
     // Use revenue table data (either generated with growth or manually edited)
     const monthlyRevenues = [...revenueTableData]; // Clone the array
 
+    // Use costs table data (either generated with growth or manually edited)
+    const monthlyCosts = [...costsTableData]; // Clone the array
+
     // Przygotuj przychody ryczałtowe (wzrost dotyczy wszystkich stawek)
     const lumpSumRevenues = [];
     for (let i = 0; i < 60; i++) {
@@ -283,7 +403,7 @@ function prepareRequestData(formData) {
         base_month: baseMonth,
         business_start_date: formData.startDate,
         monthly_revenues: monthlyRevenues,
-        monthly_costs_fixed: formData.monthlyCosts,
+        monthly_costs: monthlyCosts,
         one_time_costs: [],
         lump_sum_revenues: lumpSumRevenues,
     };

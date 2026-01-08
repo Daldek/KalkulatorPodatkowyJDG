@@ -102,8 +102,11 @@ class CalculationRequest(BaseModel):
         max_length=60,
         description="Lista 60 przychodów miesięcznych w PLN (dla skali i liniowego)",
     )
-    monthly_costs_fixed: Decimal = Field(
-        ..., ge=0, description="Stałe koszty miesięczne w PLN"
+    monthly_costs: List[Decimal] = Field(
+        ...,
+        min_length=60,
+        max_length=60,
+        description="Lista 60 kosztów miesięcznych w PLN",
     )
     one_time_costs: Optional[List[OneTimeCost]] = Field(
         default=None, description="Lista kosztów jednorazowych (opcjonalne)"
@@ -119,6 +122,14 @@ class CalculationRequest(BaseModel):
         """Waliduje przychody miesięczne."""
         if any(rev < 0 for rev in v):
             raise ValueError("Przychody miesięczne nie mogą być ujemne")
+        return v
+
+    @field_validator("monthly_costs")
+    @classmethod
+    def validate_costs(cls, v):
+        """Waliduje koszty miesięczne."""
+        if any(cost < 0 for cost in v):
+            raise ValueError("Koszty miesięczne nie mogą być ujemne")
         return v
 
     @field_validator("lump_sum_revenues")

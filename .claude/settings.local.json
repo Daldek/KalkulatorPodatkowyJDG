@@ -12,7 +12,8 @@
       "Bash(cat:*)",
       "Bash(./venv/bin/uvicorn:*)",
       "Bash(./venv/bin/python:*)",
-      "Bash(open frontend/index.html)"
+      "Bash(open frontend/index.html)",
+      "Bash(./venv/bin/pytest tests/test_linear_tax.py -v --tb=short)"
     ]
   }
 }

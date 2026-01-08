@@ -173,7 +173,7 @@ class TaxCalculator:
         base_month: str,
         business_start_date: date,
         monthly_revenues: List[Decimal],
-        monthly_costs_fixed: Decimal,
+        monthly_costs: List[Decimal],
         one_time_costs: Optional[Dict[int, Decimal]] = None,
         lump_sum_revenues: Optional[List[Dict[Decimal, Decimal]]] = None,
     ):
@@ -188,8 +188,8 @@ class TaxCalculator:
             Data rozpoczęcia działalności gospodarczej.
         monthly_revenues : List[Decimal]
             Lista przychodów miesięcznych (60 wartości dla skali i liniowego).
-        monthly_costs_fixed : Decimal
-            Stałe koszty miesięczne.
+        monthly_costs : List[Decimal]
+            Lista kosztów miesięcznych (60 wartości).
         one_time_costs : Optional[Dict[int, Decimal]], optional
             Koszty jednorazowe: {indeks_miesiąca: kwota}.
         lump_sum_revenues : Optional[List[Dict[Decimal, Decimal]]], optional
@@ -199,7 +199,7 @@ class TaxCalculator:
         self.base_month = base_month
         self.business_start_date = business_start_date
         self.monthly_revenues = monthly_revenues
-        self.monthly_costs_fixed = monthly_costs_fixed
+        self.monthly_costs = monthly_costs
         self.one_time_costs = one_time_costs or {}
         self.lump_sum_revenues = lump_sum_revenues or []
 
@@ -208,7 +208,7 @@ class TaxCalculator:
 
     def _calculate_monthly_costs(self, month_index: int) -> Decimal:
         """Oblicza koszty dla danego miesiąca."""
-        costs = self.monthly_costs_fixed
+        costs = self.monthly_costs[month_index]
 
         if month_index in self.one_time_costs:
             costs += self.one_time_costs[month_index]

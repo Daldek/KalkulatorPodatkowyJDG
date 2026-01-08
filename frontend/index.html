@@ -94,7 +94,41 @@
                             required
                             value="2500"
                         >
-                        <small>Koszty uwzględniane w skali i liniowym, w ryczałcie obniżają dochód brutto (ale nie podatek)</small>
+                        <small>Koszty bazowe (miesiąc 1). Wzrost będzie aplikowany miesięcznie przez 60 miesięcy. Uwzględniane w skali i liniowym, w ryczałcie obniżają dochód brutto (ale nie podatek)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="annualCostsGrowth">Roczny wzrost kosztów (%):</label>
+                        <input
+                            type="number"
+                            id="annualCostsGrowth"
+                            name="annualCostsGrowth"
+                            min="0"
+                            max="100"
+                            step="0.1"
+                            value="0"
+                        >
+                        <small>Wzrost równomiernie rozłożony na miesiące (compound miesięczny). 0% = stałe koszty</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="showCostsTable" name="showCostsTable">
+                            Pokaż szczegółową tabelę kosztów (edytowalna)
+                        </label>
+                        <small>Zaznacz aby edytować koszty miesięczne ręcznie</small>
+                    </div>
+
+                    <div id="costsTableContainer" class="revenue-table-container" style="display: none;">
+                        <h3>Koszty miesięczne (PLN)</h3>
+                        <div class="revenue-table-info">
+                            <p><strong>Uwaga:</strong> Zmiana procentu wzrostu lub kosztów bazowych nadpisze wszystkie wartości w tabeli.</p>
+                        </div>
+                        <div class="revenue-table-wrapper">
+                            <table id="costsTable" class="revenue-table">
+                                <!-- Generowana dynamicznie przez JavaScript -->
+                            </table>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -245,7 +279,7 @@
         </main>
 
         <footer>
-            <p>Kalkulator Podatkowy JDG v1.1.0 | Rok podatkowy: 2025</p>
+            <p>Kalkulator Podatkowy JDG v1.3.0 | Rok podatkowy: 2025</p>
             <p>Aplikacja ma charakter informacyjny i symulacyjny</p>
         </footer>
     </div>

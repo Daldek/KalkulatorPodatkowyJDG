@@ -45,7 +45,7 @@ Aplikacja wykonuje symulację finansową na **60 miesięcy** (5 lat), uwzględni
 
 ## ✨ Funkcjonalności
 
-### W zakresie (v1.2)
+### W zakresie (v1.3)
 
 ✅ Trzy formy opodatkowania: skala, liniowy, ryczałt
 ✅ Automatyczne rozpoznawanie etapów ZUS
@@ -55,6 +55,10 @@ Aplikacja wykonuje symulację finansową na **60 miesięcy** (5 lat), uwzględni
   - Parametr rocznego wzrostu % (compound miesięczny)
   - Edytowalna tabela 5×12 dla wszystkich 60 miesięcy
   - Ręczna edycja przychodów dla dowolnego miesiąca
+✅ **Modelowanie wzrostu kosztów**:
+  - Parametr rocznego wzrostu % (compound miesięczny)
+  - Edytowalna tabela 5×12 dla wszystkich 60 miesięcy
+  - Ręczna edycja kosztów dla dowolnego miesiąca
 ✅ Trzy wykresy wizualizacyjne (Chart.js):
   - Struktura kosztów pierwszego miesiąca (grouped bar chart)
   - Miesięczny dochód netto (line chart)
@@ -383,6 +387,6 @@ W razie pytań lub problemów, zgłoś issue na GitHubie.
 
 ---
 
-**Wersja:** 1.2.0
+**Wersja:** 1.3.0
 **Rok podatkowy:** 2025
 **Ostatnia aktualizacja:** 2026-01-08

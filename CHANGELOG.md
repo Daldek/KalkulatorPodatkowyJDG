@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-01-08
+
+### Added
+- Annual costs growth parameter with compound monthly distribution
+  - Growth percentage input field (default: 0%)
+  - Growth distributed evenly across all 60 months using monthly compound formula
+  - Monthly growth rate = annual growth / 12
+- Editable 5×12 costs table for fine-grained monthly cost control
+  - Shows all 60 months (5 years × 12 months) in tabular format
+  - Each cell is manually editable for custom cost projections
+  - Optional visibility via checkbox (hidden by default)
+  - Warning message when growth % overwrites manual edits
+- Costs table applies to all tax forms
+
+### Changed
+- **BREAKING**: Backend API schema change
+  - `monthly_costs_fixed: Decimal` → `monthly_costs: List[Decimal]`
+  - Backend now accepts 60 individual monthly costs (consistent with revenues)
+  - Costs remain input data, not domain logic (per RULES.md R3, R4)
+- Updated `TaxCalculator` to use list of costs instead of single value
+- Updated frontend to send costs array instead of single value
+
+### Technical
+- Backend changes in schemas, services, and API layer
+- Frontend-backend consistency: both revenues and costs are now 60-element lists
+- Updated version to v1.3.0
+
 ## [1.2.0] - 2026-01-08
 
 ### Added
