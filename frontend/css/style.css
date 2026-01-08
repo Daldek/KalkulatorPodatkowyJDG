@@ -385,6 +385,113 @@ footer p {
     }
 }
 
+/* Revenue Table Styles */
+.revenue-table-container {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background-color: var(--bg-color);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.revenue-table-container h3 {
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+}
+
+.revenue-table-info {
+    background-color: #fef3c7;
+    border-left: 4px solid var(--warning-color);
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.revenue-table-wrapper {
+    overflow-x: auto;
+    margin-top: 1rem;
+}
+
+.revenue-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+    background-color: var(--surface-color);
+}
+
+.revenue-table th {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.75rem 0.5rem;
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+}
+
+.revenue-table td {
+    padding: 0.5rem;
+    text-align: center;
+    border: 1px solid var(--border-color);
+}
+
+.revenue-table .year-label {
+    background-color: var(--secondary-color);
+    color: white;
+    font-weight: 600;
+    text-align: left;
+    padding-left: 1rem;
+    white-space: nowrap;
+}
+
+.revenue-table input[type="number"] {
+    width: 100%;
+    min-width: 80px;
+    padding: 0.4rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 0.85rem;
+    text-align: right;
+    -moz-appearance: textfield; /* Firefox */
+}
+
+/* Remove spinner arrows in Chrome, Safari, Edge, Opera */
+.revenue-table input[type="number"]::-webkit-outer-spin-button,
+.revenue-table input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.revenue-table input[type="number"]:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.revenue-table tbody tr:hover {
+    background-color: #f1f5f9;
+}
+
+/* Mobile responsiveness for revenue table */
+@media (max-width: 768px) {
+    .revenue-table {
+        font-size: 0.75rem;
+    }
+
+    .revenue-table input[type="number"] {
+        min-width: 60px;
+        font-size: 0.75rem;
+        padding: 0.3rem;
+    }
+
+    .revenue-table th,
+    .revenue-table td {
+        padding: 0.4rem 0.25rem;
+    }
+}
+
 /* Utility classes */
 .text-center {
     text-align: center;

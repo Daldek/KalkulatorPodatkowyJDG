@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-01-08
+
+### Added
+- Annual revenue growth parameter with compound monthly distribution
+  - Growth percentage input field (default: 0%)
+  - Growth distributed evenly across all 60 months using monthly compound formula
+  - Monthly growth rate = annual growth / 12
+- Editable 5×12 revenue table for fine-grained monthly revenue control
+  - Shows all 60 months (5 years × 12 months) in tabular format
+  - Each cell is manually editable for custom revenue projections
+  - Optional visibility via checkbox (hidden by default)
+  - Warning message when growth % overwrites manual edits
+- Revenue table applies to both regular forms (tax scale, linear) and lump sum
+
+### Changed
+- Revenue model: from uniform 60-month projection to dynamic growth-based
+- Base revenue input now represents month 1, with growth applied to subsequent months
+- Updated input labels to clarify growth behavior
+- Improved UX with clean number inputs (removed spinner arrows)
+
+### Technical
+- Frontend-only implementation (no backend changes required)
+- Revenue remains input data, not domain logic (per RULES.md R3, R4)
+- Vanilla JavaScript implementation following R11
+- Updated version to v1.2.0 in footer
+
 ## [1.1.0] - 2026-01-08
 
 ### Added

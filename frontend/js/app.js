@@ -13,11 +13,165 @@ let structureChart = null;
 let monthlyChart = null;
 let cumulativeChart = null;
 
+// Revenue table state
+let revenueTableData = Array(60).fill(0); // Stores all 60 monthly revenues
+
 // Inicjalizacja aplikacji
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('taxForm');
     form.addEventListener('submit', handleFormSubmit);
+    form.addEventListener('reset', handleFormReset);
+
+    // Initialize revenue table interactions
+    const showTableCheckbox = document.getElementById('showRevenueTable');
+    showTableCheckbox.addEventListener('change', handleTableVisibilityToggle);
+
+    const annualGrowthInput = document.getElementById('annualGrowth');
+    annualGrowthInput.addEventListener('input', handleGrowthChange);
+
+    const monthlyRevenueInput = document.getElementById('monthlyRevenue');
+    monthlyRevenueInput.addEventListener('input', handleBaseRevenueChange);
+
+    // Initialize revenue table data
+    initializeRevenueTable();
 });
+
+/**
+ * Initializes revenue table with current base revenue
+ */
+function initializeRevenueTable() {
+    const baseRevenue = parseFloat(document.getElementById('monthlyRevenue').value) || 0;
+    const annualGrowth = parseFloat(document.getElementById('annualGrowth').value) || 0;
+    revenueTableData = generateRevenuesWithGrowth(baseRevenue, annualGrowth);
+}
+
+/**
+ * Generates 60 monthly revenues with compound monthly growth
+ * Annual growth is distributed evenly across months
+ *
+ * @param {number} baseRevenue - Base monthly revenue (month 1)
+ * @param {number} annualGrowthPercent - Annual growth percentage
+ * @returns {number[]} Array of 60 monthly revenues
+ */
+function generateRevenuesWithGrowth(baseRevenue, annualGrowthPercent) {
+    const revenues = [];
+
+    // Monthly growth rate = annual growth / 12
+    const monthlyGrowthRate = annualGrowthPercent / 100 / 12;
+
+    // Month 1: base revenue
+    let currentRevenue = baseRevenue;
+    revenues.push(currentRevenue);
+
+    // Months 2-60: apply compound monthly growth
+    for (let month = 1; month < 60; month++) {
+        currentRevenue = currentRevenue * (1 + monthlyGrowthRate);
+        revenues.push(currentRevenue);
+    }
+
+    return revenues;
+}
+
+/**
+ * Handles visibility toggle for revenue table
+ */
+function handleTableVisibilityToggle(event) {
+    const container = document.getElementById('revenueTableContainer');
+    if (event.target.checked) {
+        container.style.display = 'block';
+        renderRevenueTable();
+    } else {
+        container.style.display = 'none';
+    }
+}
+
+/**
+ * Handles changes to annual growth percentage
+ * ALWAYS regenerates table values
+ */
+function handleGrowthChange() {
+    const baseRevenue = parseFloat(document.getElementById('monthlyRevenue').value) || 0;
+    const annualGrowth = parseFloat(document.getElementById('annualGrowth').value) || 0;
+
+    // Regenerate all revenue values
+    revenueTableData = generateRevenuesWithGrowth(baseRevenue, annualGrowth);
+
+    // Update table if visible
+    if (document.getElementById('showRevenueTable').checked) {
+        renderRevenueTable();
+    }
+}
+
+/**
+ * Handles changes to base monthly revenue
+ * ALWAYS regenerates table values
+ */
+function handleBaseRevenueChange() {
+    handleGrowthChange(); // Same logic - regenerate everything
+}
+
+/**
+ * Renders the 5x12 revenue table
+ */
+function renderRevenueTable() {
+    const table = document.getElementById('revenueTable');
+
+    // Build table HTML
+    let html = '<thead><tr><th>Rok</th>';
+
+    // Month headers
+    const monthNames = ['Sty', 'Lut', 'Mar', 'Kwi', 'Maj', 'Cze',
+                        'Lip', 'Sie', 'Wrz', 'Paź', 'Lis', 'Gru'];
+    monthNames.forEach(month => {
+        html += `<th>${month}</th>`;
+    });
+    html += '</tr></thead><tbody>';
+
+    // 5 rows (years)
+    for (let year = 0; year < 5; year++) {
+        html += `<tr><td class="year-label">Rok ${year + 1}</td>`;
+
+        // 12 columns (months)
+        for (let month = 0; month < 12; month++) {
+            const index = year * 12 + month;
+            const value = revenueTableData[index].toFixed(2);
+            html += `<td><input type="number"
+                                 min="0"
+                                 step="0.01"
+                                 value="${value}"
+                                 data-index="${index}"
+                                 onchange="handleCellEdit(this)"></td>`;
+        }
+        html += '</tr>';
+    }
+    html += '</tbody>';
+
+    table.innerHTML = html;
+}
+
+/**
+ * Handles manual editing of a revenue cell
+ * Updates the internal state
+ */
+function handleCellEdit(input) {
+    const index = parseInt(input.dataset.index);
+    const value = parseFloat(input.value) || 0;
+    revenueTableData[index] = value;
+}
+
+/**
+ * Handles form reset
+ */
+function handleFormReset() {
+    // Hide revenue table
+    document.getElementById('showRevenueTable').checked = false;
+    document.getElementById('revenueTableContainer').style.display = 'none';
+
+    // Reset revenue data
+    setTimeout(() => {
+        initializeRevenueTable();
+    }, 0);
+}
 
 /**
  * Obsługa wysłania formularza
@@ -111,16 +265,16 @@ function prepareRequestData(formData) {
     const startDate = new Date(formData.startDate);
     const baseMonth = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}`;
 
-    // Utwórz 60 miesięcy z powtórzoną kwotą przychodu
-    const monthlyRevenues = Array(60).fill(formData.monthlyRevenue);
+    // Use revenue table data (either generated with growth or manually edited)
+    const monthlyRevenues = [...revenueTableData]; // Clone the array
 
-    // Przygotuj przychody ryczałtowe
+    // Przygotuj przychody ryczałtowe (wzrost dotyczy wszystkich stawek)
     const lumpSumRevenues = [];
     for (let i = 0; i < 60; i++) {
         lumpSumRevenues.push({
             month_index: i,
             revenues_by_rate: {
-                [formData.lumpSumRate.toString()]: formData.monthlyRevenue,
+                [formData.lumpSumRate.toString()]: revenueTableData[i], // Use table data
             },
         });
     }
