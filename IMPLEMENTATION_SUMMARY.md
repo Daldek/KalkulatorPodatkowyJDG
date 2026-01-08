@@ -103,17 +103,23 @@ Zaimplementowane moduły:
 - **index.html** - formularz i wyniki
   - Minimalistyczny interfejs
   - Formularz danych wejściowych
-  - Sekcja wyników z wykresem
-  - Tabela podsumowania
+  - Sekcja wyników z trzema wykresami
+  - Cztery tabele podsumowań (6, 12, 30, 60 miesięcy)
+  - Rozwijane szczegóły miesięczne dla każdej formy
 
 - **css/style.css** - czyste stylowanie
   - CSS3 bez frameworków
   - Responsywny design
   - Zmienne CSS dla łatwej konfiguracji
+  - Dedykowane style dla tabel miesięcznych
 
 - **js/app.js** - logika frontendu (Vanilla JS)
   - Fetch API do komunikacji z backendem
-  - Chart.js dla wykresów
+  - Trzy interaktywne wykresy (Chart.js):
+    - Struktura: grouped bar chart dla pierwszego miesiąca
+    - Miesięczny: line chart z wahaniami dochodu
+    - Skumulowany: line chart z narastającym dochodem
+  - Szczegółowe tabele miesięczne (60 miesięcy × 3 formy)
   - Brak obliczeń - tylko renderowanie danych z API
 
 ### 6. ✅ Testy jednostkowe

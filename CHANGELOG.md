@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-01-08
+
+### Added
+- Three complementary visualization charts:
+  - Grouped bar chart showing first month cost structure by category
+  - Line chart for monthly net income over 60 months
+  - Line chart for cumulative net income progression
+- Detailed monthly breakdown tables for all three tax forms
+- Four summary periods instead of two (6, 12, 30, 60 months)
+
+### Fixed
+- Health insurance calculations corrected for 2025 regulations:
+  - Tax scale: 9% of income (min ~315 PLN/month)
+  - Linear tax: 4.9% of income (min ~315 PLN/month)
+  - Lump sum: fixed ~554 PLN/month
+- Lump sum costs now properly lower gross income without affecting tax calculation
+
+### Changed
+- Improved visualization with category-grouped comparisons
+- Added explanatory note about costs in lump sum taxation
+- Enhanced CSS styling for monthly detail tables
+
 ## [1.0.0] - 2026-01-07
 
 ### Added

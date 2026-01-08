@@ -51,7 +51,12 @@ Aplikacja wykonuje symulację finansową na **60 miesięcy** (5 lat), uwzględni
 ✅ Automatyczne rozpoznawanie etapów ZUS
 ✅ Horyzont 60 miesięcy (5 lat)
 ✅ Miesięczne serie danych
-✅ Wykres porównawczy (Chart.js)
+✅ Trzy wykresy wizualizacyjne (Chart.js):
+  - Struktura kosztów pierwszego miesiąca (grouped bar chart)
+  - Miesięczny dochód netto (line chart)
+  - Skumulowany dochód netto (line chart)
+✅ Szczegółowe tabele miesięczne (60 miesięcy dla każdej formy)
+✅ Cztery okresy podsumowań (6, 12, 30, 60 miesięcy)
 ✅ Wskazanie najkorzystniejszej formy (wynik matematyczny)
 ✅ Przychody ryczałtowe z wieloma stawkami
 ✅ Koszty stałe i jednorazowe
