@@ -9,7 +9,9 @@
 const API_BASE_URL = 'http://localhost:8000';
 
 // Globalne zmienne
-let chart = null;
+let structureChart = null;
+let monthlyChart = null;
+let cumulativeChart = null;
 
 // Inicjalizacja aplikacji
 document.addEventListener('DOMContentLoaded', () => {
@@ -140,7 +142,10 @@ function renderResults(data) {
     // Najkorzystniejsza forma
     renderBestForm(data);
 
-    // Wykres
+    // Wykres struktury pierwszego miesiąca
+    renderStructureChart(data);
+
+    // Wykresy liniowe (miesięczny i skumulowany)
     renderChart(data);
 
     // 4 tabele podsumowań
@@ -164,64 +169,69 @@ function renderBestForm(data) {
 }
 
 /**
- * Oblicza skumulowane wartości z tablicy
+ * Renderuje wykres słupkowy struktury pierwszego miesiąca
  */
-function calculateCumulative(values) {
-    const cumulative = [];
-    let sum = 0;
-    for (const value of values) {
-        sum += parseFloat(value);
-        cumulative.push(sum);
-    }
-    return cumulative;
-}
-
-/**
- * Renderuje wykres porównawczy
- */
-function renderChart(data) {
-    const ctx = document.getElementById('comparisonChart').getContext('2d');
+function renderStructureChart(data) {
+    const ctx = document.getElementById('structureChart').getContext('2d');
 
     // Zniszcz poprzedni wykres jeśli istnieje
-    if (chart) {
-        chart.destroy();
+    if (structureChart) {
+        structureChart.destroy();
     }
 
-    // Przygotuj dane - oblicz skumulowany dochód netto
-    const labels = data.tax_scale.months;
-    const datasets = [
-        {
-            label: 'Skala podatkowa',
-            data: calculateCumulative(data.tax_scale.monthly_net_income),
-            borderColor: '#3b82f6',
-            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-            borderWidth: 2,
-            tension: 0.1,
-        },
-        {
-            label: 'Podatek liniowy',
-            data: calculateCumulative(data.linear_tax.monthly_net_income),
-            borderColor: '#8b5cf6',
-            backgroundColor: 'rgba(139, 92, 246, 0.1)',
-            borderWidth: 2,
-            tension: 0.1,
-        },
-        {
-            label: 'Ryczałt',
-            data: calculateCumulative(data.lump_sum.monthly_net_income),
-            borderColor: '#10b981',
-            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-            borderWidth: 2,
-            tension: 0.1,
-        },
-    ];
+    // Pobierz dane z pierwszego miesiąca (indeks 0)
+    const scale = {
+        costs: parseFloat(data.tax_scale.monthly_costs[0]),
+        tax: parseFloat(data.tax_scale.monthly_tax[0]),
+        contributions: parseFloat(data.tax_scale.monthly_zus[0]) + parseFloat(data.tax_scale.monthly_health_insurance[0]),
+        netIncome: parseFloat(data.tax_scale.monthly_net_income[0]),
+    };
 
-    // Utwórz wykres
-    chart = new Chart(ctx, {
-        type: 'line',
+    const linear = {
+        costs: parseFloat(data.linear_tax.monthly_costs[0]),
+        tax: parseFloat(data.linear_tax.monthly_tax[0]),
+        contributions: parseFloat(data.linear_tax.monthly_zus[0]) + parseFloat(data.linear_tax.monthly_health_insurance[0]),
+        netIncome: parseFloat(data.linear_tax.monthly_net_income[0]),
+    };
+
+    const lumpSum = {
+        costs: parseFloat(data.lump_sum.monthly_costs[0]),
+        tax: parseFloat(data.lump_sum.monthly_tax[0]),
+        contributions: parseFloat(data.lump_sum.monthly_zus[0]) + parseFloat(data.lump_sum.monthly_health_insurance[0]),
+        netIncome: parseFloat(data.lump_sum.monthly_net_income[0]),
+    };
+
+    // Labels to kategorie (koszty, podatek, składki, dochód netto)
+    const labels = ['Koszty uzyskania przychodu', 'Podatek', 'Składki (ZUS + zdrowotna)', 'Dochód netto'];
+
+    // Datasets to formy opodatkowania (skala, liniowy, ryczałt)
+    structureChart = new Chart(ctx, {
+        type: 'bar',
         data: {
             labels: labels,
-            datasets: datasets,
+            datasets: [
+                {
+                    label: 'Skala podatkowa',
+                    data: [scale.costs, scale.tax, scale.contributions, scale.netIncome],
+                    backgroundColor: '#3b82f6',
+                    borderColor: '#2563eb',
+                    borderWidth: 1,
+                },
+                {
+                    label: 'Podatek liniowy',
+                    data: [linear.costs, linear.tax, linear.contributions, linear.netIncome],
+                    backgroundColor: '#8b5cf6',
+                    borderColor: '#7c3aed',
+                    borderWidth: 1,
+                },
+                {
+                    label: 'Ryczałt',
+                    data: [lumpSum.costs, lumpSum.tax, lumpSum.contributions, lumpSum.netIncome],
+                    backgroundColor: '#10b981',
+                    borderColor: '#059669',
+                    borderWidth: 1,
+                },
+            ],
         },
         options: {
             responsive: true,
@@ -229,9 +239,21 @@ function renderChart(data) {
             plugins: {
                 title: {
                     display: true,
-                    text: 'Skumulowany dochód netto (PLN)',
+                    text: 'Struktura kosztów i dochodów - pierwszy miesiąc działalności',
                     font: {
                         size: 16,
+                    },
+                },
+                subtitle: {
+                    display: true,
+                    text: 'Uwaga: W ryczałcie koszty nie wpływają na wysokość podatku',
+                    font: {
+                        size: 12,
+                        style: 'italic',
+                    },
+                    color: '#64748b',
+                    padding: {
+                        bottom: 10,
                     },
                 },
                 legend: {
@@ -239,8 +261,6 @@ function renderChart(data) {
                     position: 'top',
                 },
                 tooltip: {
-                    mode: 'index',
-                    intersect: false,
                     callbacks: {
                         label: function (context) {
                             let label = context.dataset.label || '';
@@ -258,22 +278,216 @@ function renderChart(data) {
                     display: true,
                     title: {
                         display: true,
-                        text: 'Miesiąc',
-                    },
-                    ticks: {
-                        maxTicksLimit: 12,
+                        text: 'Kategoria',
                     },
                 },
                 y: {
                     display: true,
                     title: {
                         display: true,
-                        text: 'Skumulowany dochód netto (PLN)',
+                        text: 'Kwota (PLN)',
                     },
                     ticks: {
                         callback: function (value) {
                             return formatCurrency(value);
                         },
+                    },
+                },
+            },
+        },
+    });
+}
+
+/**
+ * Oblicza skumulowane wartości z tablicy
+ */
+function calculateCumulative(values) {
+    const cumulative = [];
+    let sum = 0;
+    for (const value of values) {
+        sum += parseFloat(value);
+        cumulative.push(sum);
+    }
+    return cumulative;
+}
+
+/**
+ * Renderuje wykresy porównawcze (miesięczny i skumulowany)
+ */
+function renderChart(data) {
+    const labels = data.tax_scale.months;
+
+    // Wspólne definicje kolorów
+    const colors = {
+        scale: { border: '#3b82f6', bg: 'rgba(59, 130, 246, 0.1)' },
+        linear: { border: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.1)' },
+        lumpSum: { border: '#10b981', bg: 'rgba(16, 185, 129, 0.1)' },
+    };
+
+    // Wspólne opcje wykresów
+    const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top',
+            },
+            tooltip: {
+                mode: 'index',
+                intersect: false,
+                callbacks: {
+                    label: function (context) {
+                        let label = context.dataset.label || '';
+                        if (label) {
+                            label += ': ';
+                        }
+                        label += formatCurrency(context.parsed.y);
+                        return label;
+                    },
+                },
+            },
+        },
+        scales: {
+            x: {
+                display: true,
+                title: {
+                    display: true,
+                    text: 'Miesiąc',
+                },
+                ticks: {
+                    maxTicksLimit: 12,
+                },
+            },
+            y: {
+                display: true,
+                ticks: {
+                    callback: function (value) {
+                        return formatCurrency(value);
+                    },
+                },
+            },
+        },
+    };
+
+    // Wykres 1: Miesięczny dochód netto
+    const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+    if (monthlyChart) {
+        monthlyChart.destroy();
+    }
+
+    monthlyChart = new Chart(monthlyCtx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Skala podatkowa',
+                    data: data.tax_scale.monthly_net_income,
+                    borderColor: colors.scale.border,
+                    backgroundColor: colors.scale.bg,
+                    borderWidth: 2,
+                    tension: 0.1,
+                },
+                {
+                    label: 'Podatek liniowy',
+                    data: data.linear_tax.monthly_net_income,
+                    borderColor: colors.linear.border,
+                    backgroundColor: colors.linear.bg,
+                    borderWidth: 2,
+                    tension: 0.1,
+                },
+                {
+                    label: 'Ryczałt',
+                    data: data.lump_sum.monthly_net_income,
+                    borderColor: colors.lumpSum.border,
+                    backgroundColor: colors.lumpSum.bg,
+                    borderWidth: 2,
+                    tension: 0.1,
+                },
+            ],
+        },
+        options: {
+            ...commonOptions,
+            plugins: {
+                ...commonOptions.plugins,
+                title: {
+                    display: true,
+                    text: 'Miesięczny dochód netto (PLN)',
+                    font: {
+                        size: 16,
+                    },
+                },
+            },
+            scales: {
+                ...commonOptions.scales,
+                y: {
+                    ...commonOptions.scales.y,
+                    title: {
+                        display: true,
+                        text: 'Dochód netto (PLN)',
+                    },
+                },
+            },
+        },
+    });
+
+    // Wykres 2: Skumulowany dochód netto
+    const cumulativeCtx = document.getElementById('cumulativeChart').getContext('2d');
+    if (cumulativeChart) {
+        cumulativeChart.destroy();
+    }
+
+    cumulativeChart = new Chart(cumulativeCtx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Skala podatkowa',
+                    data: calculateCumulative(data.tax_scale.monthly_net_income),
+                    borderColor: colors.scale.border,
+                    backgroundColor: colors.scale.bg,
+                    borderWidth: 2,
+                    tension: 0.1,
+                },
+                {
+                    label: 'Podatek liniowy',
+                    data: calculateCumulative(data.linear_tax.monthly_net_income),
+                    borderColor: colors.linear.border,
+                    backgroundColor: colors.linear.bg,
+                    borderWidth: 2,
+                    tension: 0.1,
+                },
+                {
+                    label: 'Ryczałt',
+                    data: calculateCumulative(data.lump_sum.monthly_net_income),
+                    borderColor: colors.lumpSum.border,
+                    backgroundColor: colors.lumpSum.bg,
+                    borderWidth: 2,
+                    tension: 0.1,
+                },
+            ],
+        },
+        options: {
+            ...commonOptions,
+            plugins: {
+                ...commonOptions.plugins,
+                title: {
+                    display: true,
+                    text: 'Skumulowany dochód netto (PLN)',
+                    font: {
+                        size: 16,
+                    },
+                },
+            },
+            scales: {
+                ...commonOptions.scales,
+                y: {
+                    ...commonOptions.scales.y,
+                    title: {
+                        display: true,
+                        text: 'Skumulowany dochód netto (PLN)',
                     },
                 },
             },
@@ -336,8 +550,57 @@ function renderPeriodSummaryTable(data, summaryKey, tbodyId) {
 function renderMonthlyDetails(data) {
     const monthlyDiv = document.getElementById('monthlyData');
 
-    let html = '<p>Dane miesięczne zawierają 60 punktów danych dla każdej formy opodatkowania.</p>';
-    html += '<p>Wykresy i tabele powyżej pokazują kompletne porównanie.</p>';
+    const forms = [
+        { name: 'Skala podatkowa', key: 'tax_scale', data: data.tax_scale },
+        { name: 'Podatek liniowy', key: 'linear_tax', data: data.linear_tax },
+        { name: 'Ryczałt', key: 'lump_sum', data: data.lump_sum },
+    ];
+
+    let html = '<div class="monthly-tables">';
+
+    forms.forEach(form => {
+        html += `
+            <div class="monthly-table-section">
+                <h4>${form.name}</h4>
+                <table class="monthly-table">
+                    <thead>
+                        <tr>
+                            <th>Miesiąc</th>
+                            <th>Przychód</th>
+                            <th>Koszty</th>
+                            <th>Dochód</th>
+                            <th>ZUS</th>
+                            <th>Podatek</th>
+                            <th>Składka zdrowotna</th>
+                            <th>Dochód netto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        for (let i = 0; i < form.data.months.length; i++) {
+            html += `
+                <tr>
+                    <td>${form.data.months[i]}</td>
+                    <td>${formatCurrency(form.data.monthly_revenue[i])}</td>
+                    <td>${formatCurrency(form.data.monthly_costs[i])}</td>
+                    <td>${formatCurrency(form.data.monthly_income[i])}</td>
+                    <td>${formatCurrency(form.data.monthly_zus[i])}</td>
+                    <td>${formatCurrency(form.data.monthly_tax[i])}</td>
+                    <td>${formatCurrency(form.data.monthly_health_insurance[i])}</td>
+                    <td><strong>${formatCurrency(form.data.monthly_net_income[i])}</strong></td>
+                </tr>
+            `;
+        }
+
+        html += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+    });
+
+    html += '</div>';
 
     monthlyDiv.innerHTML = html;
 }

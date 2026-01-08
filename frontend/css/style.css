@@ -251,6 +251,62 @@ summary:hover {
     color: var(--primary-hover);
 }
 
+.monthly-tables {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    margin-top: 1rem;
+}
+
+.monthly-table-section {
+    background-color: var(--surface-color);
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.monthly-table-section h4 {
+    margin: 0 0 1rem 0;
+    color: var(--primary-color);
+    font-size: 1.25rem;
+}
+
+.monthly-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.monthly-table thead {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.monthly-table th {
+    padding: 0.75rem 0.5rem;
+    text-align: right;
+    font-size: 0.75rem;
+}
+
+.monthly-table th:first-child {
+    text-align: left;
+}
+
+.monthly-table td {
+    padding: 0.5rem;
+    text-align: right;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.monthly-table td:first-child {
+    text-align: left;
+    font-weight: 500;
+}
+
+.monthly-table tbody tr:hover {
+    background-color: #f1f5f9;
+}
+
 /* Loading spinner */
 .loading-spinner {
     text-align: center;
