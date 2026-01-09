@@ -45,7 +45,7 @@ Aplikacja wykonuje symulację finansową na **60 miesięcy** (5 lat), uwzględni
 
 ## ✨ Funkcjonalności
 
-### W zakresie (v1.3)
+### W zakresie (v1.4)
 
 ✅ Trzy formy opodatkowania: skala, liniowy, ryczałt
 ✅ Automatyczne rozpoznawanie etapów ZUS
@@ -387,6 +387,6 @@ W razie pytań lub problemów, zgłoś issue na GitHubie.
 
 ---
 
-**Wersja:** 1.3.0
+**Wersja:** 1.4.0
 **Rok podatkowy:** 2025
-**Ostatnia aktualizacja:** 2026-01-08
+**Ostatnia aktualizacja:** 2026-01-09

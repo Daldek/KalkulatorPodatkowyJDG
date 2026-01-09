@@ -288,6 +288,12 @@ class TaxCalculator:
         -------
         TaxFormResult
             Kompletny wynik dla skali podatkowej.
+
+        Notes
+        -----
+        Podatek jest obliczany narastająco w ciągu roku kalendarzowego,
+        zgodnie z polskimi przepisami. Próg 120 000 PLN i kwota wolna
+        są stosowane rocznie, nie miesięcznie.
         """
         zus_list = self._calculate_zus_for_months()
 
@@ -296,17 +302,41 @@ class TaxCalculator:
         monthly_health_list = []
         monthly_net_list = []
 
+        # Zmienne do śledzenia narastającego dochodu i podatku w roku
+        current_year = None
+        cumulative_tax_base = Decimal("0")
+        cumulative_tax_paid = Decimal("0")
+
         for i, month_date in enumerate(self.months):
+            # Sprawdź czy zaczął się nowy rok kalendarzowy
+            if current_year != month_date.year:
+                current_year = month_date.year
+                cumulative_tax_base = Decimal("0")
+                cumulative_tax_paid = Decimal("0")
+
             revenue = self.monthly_revenues[i]
             costs = self._calculate_monthly_costs(i)
             income = revenue - costs
             zus = zus_list[i]
 
-            # Podatek miesięczny
-            tax = calculate_monthly_tax_advance_scale(income)
+            # Podstawa opodatkowania: dochód pomniejszony o składki ZUS społeczne
+            tax_base = max(Decimal("0"), income - zus)
 
-            # Składka zdrowotna miesięczna (skala: 9% dochodu, min ~315 PLN)
-            health = calculate_health_insurance_monthly_scale(income)
+            # Dodaj do narastającej podstawy opodatkowania
+            cumulative_tax_base += tax_base
+
+            # Oblicz podatek narastająco od początku roku
+            cumulative_tax_due = calculate_income_tax_scale(cumulative_tax_base)
+
+            # Zaliczka miesięczna = podatek narastający - suma wcześniejszych zaliczek
+            tax = max(Decimal("0"), cumulative_tax_due - cumulative_tax_paid)
+            tax = tax.quantize(Decimal("0.01"))
+
+            # Zaktualizuj sumę zapłaconych zaliczek
+            cumulative_tax_paid += tax
+
+            # Składka zdrowotna miesięczna (skala: 9% dochodu po odliczeniu ZUS)
+            health = calculate_health_insurance_monthly_scale(tax_base)
 
             # Dochód netto
             net_income = income - zus - tax - health
@@ -395,11 +425,14 @@ class TaxCalculator:
             income = revenue - costs
             zus = zus_list[i]
 
-            # Podatek miesięczny
-            tax = calculate_monthly_tax_advance_linear(income)
+            # Podstawa opodatkowania: dochód pomniejszony o składki ZUS społeczne
+            tax_base = max(Decimal("0"), income - zus)
 
-            # Składka zdrowotna miesięczna (liniowy: 4.9% dochodu, min ~315 PLN)
-            health = calculate_health_insurance_monthly_linear(income)
+            # Podatek miesięczny
+            tax = calculate_monthly_tax_advance_linear(tax_base)
+
+            # Składka zdrowotna miesięczna (liniowy: 4.9% dochodu po odliczeniu ZUS)
+            health = calculate_health_insurance_monthly_linear(tax_base)
 
             # Dochód netto
             net_income = income - zus - tax - health
@@ -501,8 +534,17 @@ class TaxCalculator:
             income = total_revenue - costs  # Dochód = przychód - koszty
             zus = zus_list[i]
 
-            # Podatek ryczałtowy (od przychodu, nie od dochodu)
-            tax = calculate_monthly_tax_lump_sum(revenue_by_rate)
+            # Ryczałt: odliczenie ZUS od przychodu (proporcjonalnie do stawek)
+            if total_revenue > 0:
+                revenue_after_zus_by_rate = {}
+                for rate, revenue in revenue_by_rate.items():
+                    proportion = revenue / total_revenue
+                    zus_for_rate = zus * proportion
+                    revenue_after_zus = max(Decimal("0"), revenue - zus_for_rate)
+                    revenue_after_zus_by_rate[rate] = revenue_after_zus
+                tax = calculate_monthly_tax_lump_sum(revenue_after_zus_by_rate)
+            else:
+                tax = Decimal("0")
 
             # Składka zdrowotna stała dla ryczałtu
             health = calculate_health_insurance_monthly_lump_sum()

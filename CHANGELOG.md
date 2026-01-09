@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-01-09
+
+### Fixed
+- **Critical: Tax calculation corrections for all three tax forms**
+  - ZUS social contributions now properly deducted from tax base before calculating income tax
+  - ZUS social contributions now properly deducted from health insurance base
+  - Lump sum: ZUS now proportionally deducted from revenues by rate before tax calculation
+
+- **Critical: Progressive tax scale (skala podatkowa) cumulative calculation**
+  - Tax now calculated cumulatively within calendar year (as required by Polish law)
+  - 120,000 PLN threshold applied annually, not monthly
+  - Tax-free amount (30,000 PLN / 3,600 PLN reduction) properly applied cumulatively
+  - Monthly tax advances calculated as: cumulative_tax_due - previous_advances_paid
+
+### Changed
+- Tax calculator service (`tax_calculator.py`) rewritten to use cumulative approach
+- Health insurance tests updated to match current API (separate functions for scale and linear)
+
+### Technical
+- All 92 unit tests passing
+- Verified calculations:
+  - Income ≤ 30,000 PLN/year → 0 PLN tax (tax-free amount works)
+  - Income 193,669 PLN/year → 34,374 PLN tax (matches formula: 10,800 + 32% × excess over 120k)
+  - Tax jump visible in month when 120,000 PLN threshold is exceeded
+
 ## [1.3.0] - 2026-01-08
 
 ### Added

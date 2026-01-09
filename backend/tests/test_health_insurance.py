@@ -8,69 +8,85 @@ import pytest
 from decimal import Decimal
 
 from app.domain.health_insurance import (
-    calculate_health_insurance_annual_scale_linear,
-    calculate_health_insurance_monthly_scale_linear,
+    calculate_health_insurance_monthly_scale,
+    calculate_health_insurance_monthly_linear,
     calculate_health_insurance_monthly_lump_sum,
     calculate_health_insurance_annual_lump_sum,
     distribute_annual_to_monthly,
 )
 from app.core.constants_2025 import (
-    HEALTH_INSURANCE_RATE_SCALE_LINEAR,
+    HEALTH_INSURANCE_RATE_SCALE,
+    HEALTH_INSURANCE_RATE_LINEAR,
+    HEALTH_INSURANCE_MIN_MONTHLY_SCALE,
+    HEALTH_INSURANCE_MIN_MONTHLY_LINEAR,
     HEALTH_INSURANCE_MONTHLY_LUMP_SUM,
 )
 
 
-class TestHealthInsuranceScaleLinear:
-    """Testy składki zdrowotnej dla skali i podatku liniowego."""
-
-    def test_annual_calculation(self):
-        """Test: roczna składka = 9% dochodu."""
-        annual_income = Decimal("100000")
-        health = calculate_health_insurance_annual_scale_linear(annual_income)
-
-        # 100000 * 0.09 = 9000
-        expected = annual_income * HEALTH_INSURANCE_RATE_SCALE_LINEAR
-        assert health == expected.quantize(Decimal("0.01"))
-
-    def test_annual_zero_income(self):
-        """Test: zerowy dochód = zerowa składka."""
-        health = calculate_health_insurance_annual_scale_linear(Decimal("0"))
-        assert health == Decimal("0")
-
-    def test_annual_negative_income(self):
-        """Test: ujemny dochód = zerowa składka."""
-        health = calculate_health_insurance_annual_scale_linear(Decimal("-10000"))
-        assert health == Decimal("0")
+class TestHealthInsuranceScale:
+    """Testy składki zdrowotnej dla skali podatkowej."""
 
     def test_monthly_calculation(self):
-        """Test: miesięczna zaliczka = 9% miesięcznego dochodu."""
+        """Test: miesięczna składka = 9% dochodu (min ~315 PLN)."""
         monthly_income = Decimal("10000")
-        health = calculate_health_insurance_monthly_scale_linear(monthly_income)
+        health = calculate_health_insurance_monthly_scale(monthly_income)
 
         # 10000 * 0.09 = 900
-        expected = monthly_income * HEALTH_INSURANCE_RATE_SCALE_LINEAR
+        expected = monthly_income * HEALTH_INSURANCE_RATE_SCALE
         assert health == expected.quantize(Decimal("0.01"))
 
-    def test_monthly_zero_income(self):
-        """Test: zerowy miesięczny dochód = zerowa składka."""
-        health = calculate_health_insurance_monthly_scale_linear(Decimal("0"))
-        assert health == Decimal("0")
+    def test_monthly_zero_income_returns_minimum(self):
+        """Test: zerowy dochód = minimalna składka."""
+        health = calculate_health_insurance_monthly_scale(Decimal("0"))
+        assert health == HEALTH_INSURANCE_MIN_MONTHLY_SCALE
 
-    def test_monthly_consistency(self):
-        """Test: 12 miesięcy powinno dać roczną kwotę."""
-        monthly_income = Decimal("10000")
-        monthly_health = calculate_health_insurance_monthly_scale_linear(monthly_income)
+    def test_monthly_negative_income_returns_minimum(self):
+        """Test: ujemny dochód = minimalna składka."""
+        health = calculate_health_insurance_monthly_scale(Decimal("-10000"))
+        assert health == HEALTH_INSURANCE_MIN_MONTHLY_SCALE
 
-        annual_income = monthly_income * 12
-        annual_health = calculate_health_insurance_annual_scale_linear(annual_income)
-
-        # Miesięczna * 12 = roczna
-        assert (monthly_health * 12) == annual_health
+    def test_monthly_low_income_returns_minimum(self):
+        """Test: niski dochód = minimalna składka."""
+        # Dochód tak niski, że 9% jest mniejsze od minimum
+        low_income = Decimal("1000")  # 9% = 90 PLN < minimum ~315 PLN
+        health = calculate_health_insurance_monthly_scale(low_income)
+        assert health == HEALTH_INSURANCE_MIN_MONTHLY_SCALE.quantize(Decimal("0.01"))
 
     def test_result_is_decimal(self):
         """Test: wynik jest Decimal z 2 miejscami po przecinku."""
         income = Decimal("10000")
-        health = calculate_health_insurance_monthly_scale_linear(income)
+        health = calculate_health_insurance_monthly_scale(income)
+        assert isinstance(health, Decimal)
+        assert health == health.quantize(Decimal("0.01"))
+
+
+class TestHealthInsuranceLinear:
+    """Testy składki zdrowotnej dla podatku liniowego."""
+
+    def test_monthly_calculation(self):
+        """Test: miesięczna składka = 4.9% dochodu (min ~315 PLN)."""
+        monthly_income = Decimal("10000")
+        health = calculate_health_insurance_monthly_linear(monthly_income)
+
+        # 10000 * 0.049 = 490
+        expected = monthly_income * HEALTH_INSURANCE_RATE_LINEAR
+        assert health == expected.quantize(Decimal("0.01"))
+
+    def test_monthly_zero_income_returns_minimum(self):
+        """Test: zerowy dochód = minimalna składka."""
+        health = calculate_health_insurance_monthly_linear(Decimal("0"))
+        assert health == HEALTH_INSURANCE_MIN_MONTHLY_LINEAR
+
+    def test_monthly_low_income_returns_minimum(self):
+        """Test: niski dochód = minimalna składka (4.9% < minimum)."""
+        low_income = Decimal("1000")  # 4.9% = 49 PLN < minimum ~315 PLN
+        health = calculate_health_insurance_monthly_linear(low_income)
+        assert health == HEALTH_INSURANCE_MIN_MONTHLY_LINEAR.quantize(Decimal("0.01"))
+
+    def test_result_is_decimal(self):
+        """Test: wynik jest Decimal z 2 miejscami po przecinku."""
+        income = Decimal("10000")
+        health = calculate_health_insurance_monthly_linear(income)
         assert isinstance(health, Decimal)
         assert health == health.quantize(Decimal("0.01"))
 
@@ -158,23 +174,36 @@ class TestComparisonBetweenForms:
 
     def test_scale_vs_lump_sum_different_base(self):
         """Test: składka dla skali i ryczałtu opiera się na różnych podstawach."""
-        # Dla skali/liniowego: zależy od dochodu
+        # Dla skali: zależy od dochodu (9%)
         income = Decimal("50000")
-        scale_health = calculate_health_insurance_monthly_scale_linear(income)
+        scale_health = calculate_health_insurance_monthly_scale(income)
 
         # Dla ryczałtu: stała kwota
         lump_sum_health = calculate_health_insurance_monthly_lump_sum()
 
         # Powinny być różne (bo różne podstawy)
-        # (chyba że przypadkiem wyszło tak samo, ale to mało prawdopodobne)
         assert isinstance(scale_health, Decimal)
         assert isinstance(lump_sum_health, Decimal)
 
+    def test_scale_vs_linear_different_rates(self):
+        """Test: skala (9%) vs liniowy (4.9%) mają różne stawki."""
+        income = Decimal("10000")
+        scale_health = calculate_health_insurance_monthly_scale(income)
+        linear_health = calculate_health_insurance_monthly_linear(income)
+
+        # Skala: 10000 * 0.09 = 900
+        # Liniowy: 10000 * 0.049 = 490
+        assert scale_health > linear_health
+
     def test_health_insurance_always_positive(self):
-        """Test: składka zdrowotna zawsze >= 0."""
-        # Dla skali
-        assert calculate_health_insurance_monthly_scale_linear(Decimal("100000")) > 0
-        assert calculate_health_insurance_monthly_scale_linear(Decimal("0")) == 0
+        """Test: składka zdrowotna zawsze > 0 (minimum dla zerowego dochodu)."""
+        # Dla skali - minimum przy zerowym dochodzie
+        assert calculate_health_insurance_monthly_scale(Decimal("100000")) > 0
+        assert calculate_health_insurance_monthly_scale(Decimal("0")) > 0  # minimum
+
+        # Dla liniowego
+        assert calculate_health_insurance_monthly_linear(Decimal("100000")) > 0
+        assert calculate_health_insurance_monthly_linear(Decimal("0")) > 0  # minimum
 
         # Dla ryczałtu
         assert calculate_health_insurance_monthly_lump_sum() > 0

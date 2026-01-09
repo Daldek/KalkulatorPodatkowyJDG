@@ -23,57 +23,86 @@ from app.core.constants_2025 import (
 class TestCalculateMonthsSinceStart:
     """Testy obliczania liczby miesięcy od rozpoczęcia działalności."""
 
-    def test_same_month(self):
-        """Test: ten sam miesiąc = 0 miesięcy."""
-        start = date(2025, 1, 15)
+    def test_same_month_started_first_day(self):
+        """Test: działalność od 1. dnia, ten sam miesiąc = 0 miesięcy (pełny)."""
+        start = date(2025, 1, 1)
         current = date(2025, 1, 20)
         assert calculate_months_since_start(start, current) == 0
 
-    def test_one_month_later(self):
-        """Test: miesiąc później = 1 miesiąc."""
+    def test_same_month_started_after_first_day(self):
+        """Test: działalność od 2.+ dnia, ten sam miesiąc = -1 (niepełny)."""
+        start = date(2025, 1, 15)
+        current = date(2025, 1, 20)
+        assert calculate_months_since_start(start, current) == -1
+
+    def test_one_month_later_started_after_first_day(self):
+        """Test: działalność od 15., miesiąc później = 0 (pierwszy pełny)."""
         start = date(2025, 1, 15)
         current = date(2025, 2, 15)
-        assert calculate_months_since_start(start, current) == 1
+        assert calculate_months_since_start(start, current) == 0
 
-    def test_six_months_later(self):
-        """Test: 6 miesięcy później."""
+    def test_six_months_later_started_first_day(self):
+        """Test: działalność od 1., 6 miesięcy później = 6 pełnych."""
         start = date(2025, 1, 1)
         current = date(2025, 7, 1)
         assert calculate_months_since_start(start, current) == 6
 
-    def test_one_year_later(self):
-        """Test: rok później = 12 miesięcy."""
+    def test_six_months_later_started_after_first_day(self):
+        """Test: działalność od 2., 6 miesięcy później = 5 pełnych."""
+        start = date(2025, 1, 2)
+        current = date(2025, 7, 1)
+        assert calculate_months_since_start(start, current) == 5
+
+    def test_one_year_later_started_first_day(self):
+        """Test: działalność od 1., rok później = 12 miesięcy."""
         start = date(2025, 1, 1)
         current = date(2026, 1, 1)
         assert calculate_months_since_start(start, current) == 12
 
-    def test_partial_month_counted_as_full(self):
-        """Test: niepełny miesiąc liczony jako pełny miesiąc kalendarzowy."""
-        start = date(2025, 1, 15)
-        current = date(2025, 2, 10)
-        # Styczeń = miesiąc 0, luty = miesiąc 1 (pełne miesiące kalendarzowe)
-        assert calculate_months_since_start(start, current) == 1
+    def test_one_year_later_started_after_first_day(self):
+        """Test: działalność od 2., rok później = 11 pełnych miesięcy."""
+        start = date(2025, 1, 2)
+        current = date(2026, 1, 1)
+        assert calculate_months_since_start(start, current) == 11
 
 
 class TestDetermineZusStage:
     """Testy określania etapu ZUS."""
 
-    def test_relief_stage_first_month(self):
-        """Test: pierwszy miesiąc = ulga na start."""
+    def test_relief_stage_first_month_started_first_day(self):
+        """Test: działalność od 1., pierwszy miesiąc = ulga na start."""
         start = date(2025, 1, 1)
         current = date(2025, 1, 1)
         assert determine_zus_stage(start, current) == "relief"
 
-    def test_relief_stage_last_month(self):
-        """Test: ostatni miesiąc ulgi (miesiąc 5)."""
+    def test_relief_stage_partial_month_started_after_first_day(self):
+        """Test: działalność od 2., niepełny miesiąc = ulga na start."""
+        start = date(2025, 1, 2)
+        current = date(2025, 1, 15)
+        assert determine_zus_stage(start, current) == "relief"
+
+    def test_relief_stage_last_month_started_first_day(self):
+        """Test: działalność od 1., ostatni miesiąc ulgi (miesiąc 5 = cze)."""
         start = date(2025, 1, 1)
         current = date(2025, 6, 1)
         assert determine_zus_stage(start, current) == "relief"
 
-    def test_preferential_stage_first_month(self):
-        """Test: pierwszy miesiąc preferencyjnego (miesiąc 6)."""
+    def test_relief_stage_last_month_started_after_first_day(self):
+        """Test: działalność od 2., ostatni miesiąc ulgi (miesiąc 5 = lip)."""
+        start = date(2025, 1, 2)
+        current = date(2025, 7, 1)
+        assert determine_zus_stage(start, current) == "relief"
+
+    def test_preferential_stage_first_month_started_first_day(self):
+        """Test: działalność od 1., pierwszy miesiąc preferencyjnego (miesiąc 6 = lip)."""
         start = date(2025, 1, 1)
         current = date(2025, 7, 1)
+        assert determine_zus_stage(start, current) == "preferential"
+
+    def test_preferential_stage_first_month_started_after_first_day(self):
+        """Test: działalność od 2., pierwszy miesiąc preferencyjnego (miesiąc 6 = sie)."""
+        start = date(2025, 1, 2)
+        current = date(2025, 8, 1)
         assert determine_zus_stage(start, current) == "preferential"
 
     def test_preferential_stage_middle(self):
@@ -82,16 +111,28 @@ class TestDetermineZusStage:
         current = date(2026, 1, 1)  # 12 miesięcy
         assert determine_zus_stage(start, current) == "preferential"
 
-    def test_preferential_stage_last_month(self):
-        """Test: ostatni miesiąc preferencyjnego (miesiąc 29)."""
+    def test_preferential_stage_last_month_started_first_day(self):
+        """Test: działalność od 1., ostatni miesiąc preferencyjnego (miesiąc 29 = cze 2027)."""
         start = date(2025, 1, 1)
         current = date(2027, 6, 1)  # 29 miesięcy
         assert determine_zus_stage(start, current) == "preferential"
 
-    def test_full_stage_first_month(self):
-        """Test: pierwszy miesiąc pełnego ZUS (miesiąc 30)."""
+    def test_preferential_stage_last_month_started_after_first_day(self):
+        """Test: działalność od 2., ostatni miesiąc preferencyjnego (miesiąc 29 = lip 2027)."""
+        start = date(2025, 1, 2)
+        current = date(2027, 7, 1)  # 29 miesięcy
+        assert determine_zus_stage(start, current) == "preferential"
+
+    def test_full_stage_first_month_started_first_day(self):
+        """Test: działalność od 1., pierwszy miesiąc pełnego ZUS (miesiąc 30 = lip 2027)."""
         start = date(2025, 1, 1)
         current = date(2027, 7, 1)  # 30 miesięcy
+        assert determine_zus_stage(start, current) == "full"
+
+    def test_full_stage_first_month_started_after_first_day(self):
+        """Test: działalność od 2., pierwszy miesiąc pełnego ZUS (miesiąc 30 = sie 2027)."""
+        start = date(2025, 1, 2)
+        current = date(2027, 8, 1)  # 30 miesięcy
         assert determine_zus_stage(start, current) == "full"
 
     def test_full_stage_much_later(self):
